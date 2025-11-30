@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: autoshield-ui
+  
+  security:
+    user:
+      name: admin
+      password: admin123
+
+server:
+  port: 8081
+
+vaadin:
+  launch-browser: false
+  productionMode: false
+
+# Backend API configuration
+autoshield:
+  backend:
+    url: ${BACKEND_URL:http://localhost:8080}
+    username: ${BACKEND_USERNAME:admin}
+    password: ${BACKEND_PASSWORD:admin123}

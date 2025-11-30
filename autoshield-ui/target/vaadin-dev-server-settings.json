@@ -1,0 +1,17 @@
+{
+  "frontendFolder": "D:/webautoshild/autoshield-ui/frontend",
+  "themeFolder": "themes",
+  "themeResourceFolder": "D:/webautoshild/autoshield-ui/frontend/generated/jar-resources",
+  "staticOutput": "D:/webautoshild/autoshield-ui/target/classes/META-INF/VAADIN/webapp/VAADIN/static",
+  "generatedFolder": "generated",
+  "statsOutput": "D:\\webautoshild\\autoshield-ui\\target\\classes\\META-INF\\VAADIN\\config",
+  "frontendBundleOutput": "D:\\webautoshild\\autoshield-ui\\target\\classes\\META-INF\\VAADIN\\webapp",
+  "devBundleOutput": "D:/webautoshild/autoshield-ui/target/dev-bundle/webapp",
+  "devBundleStatsOutput": "D:/webautoshild/autoshield-ui/target/dev-bundle/config",
+  "jarResourcesFolder": "D:/webautoshild/autoshield-ui/frontend/generated/jar-resources",
+  "themeName": "autoshield",
+  "clientServiceWorkerSource": "D:\\webautoshild\\autoshield-ui\\target\\sw.ts",
+  "pwaEnabled": false,
+  "offlineEnabled": false,
+  "offlinePath": "'offline.html'"
+}

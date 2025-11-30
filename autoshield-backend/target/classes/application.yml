@@ -1,0 +1,70 @@
+spring:
+  application:
+    name: autoshield-backend
+  
+  datasource:
+    url: jdbc:h2:file:./data/autoshield;AUTO_SERVER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+  
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+server:
+  port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+
+# Management endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# API Documentation
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+
+# Custom properties
+proxmox:
+  api:
+    url: ${PROXMOX_URL:https://192.168.100.50:8006}
+    token: ${PROXMOX_TOKEN:}
+    timeout: 10000
+
+python:
+  ai:
+    url: ${PYTHON_AI_URL:http://192.168.100.51:8000}
+    timeout: 30000
+
+autoshield:
+  metrics:
+    retention-days: 7
+  security:
+    max-failed-logins: 5
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:8081}
