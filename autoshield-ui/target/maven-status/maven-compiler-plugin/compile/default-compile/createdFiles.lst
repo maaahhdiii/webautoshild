@@ -6,10 +6,12 @@ com\autoshield\dto\AlertDto$AlertDtoBuilder.class
 com\autoshield\dto\AlertDto.class
 com\autoshield\services\BackendService$3.class
 com\autoshield\dto\SystemMetricDto$SystemMetricDtoBuilder.class
+com\autoshield\views\AlertsView.class
 com\autoshield\security\SecurityConfig.class
 com\autoshield\views\SecurityControlView.class
 com\autoshield\services\BackendService$2.class
 com\autoshield\components\MetricCard.class
+com\autoshield\views\MainLayout.class
 com\autoshield\services\BackendService.class
 com\autoshield\views\LoginView.class
 com\autoshield\services\BackendService$1.class

@@ -1,0 +1,9 @@
+/* AutoShield Theme Styles */
+
+/* Custom theme variables */
+:root {
+    --autoshield-primary: #667eea;
+    --autoshield-secondary: #764ba2;
+}
+
+/* Additional custom styles for the application */

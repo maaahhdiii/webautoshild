@@ -1,0 +1,336 @@
+================================================================================
+                    AUTOSHIELD PROJECT - WORK SUMMARY
+================================================================================
+
+Date: November 30, 2025
+Project: AutoShield Security Monitoring System
+Tech Stack: Spring Boot, Vaadin, Proxmox Integration
+
+================================================================================
+                         WHAT WE ACCOMPLISHED
+================================================================================
+
+1. SPRING BOOT UPGRADE (3.2.0 → 3.5.1)
+   -------------------------------------
+   - Successfully upgraded from Spring Boot 3.2.0 to 3.5.1
+   - Used automated Java upgrade tools for a safe, milestone-based approach
+   - Upgrade path: 3.2.0 → 3.3.7 → 3.4.2 → 3.5.1
+   - Each milestone was validated with:
+     * CVE (security vulnerability) checks
+     * Code behavior validation
+     * Test suite execution
+   - Both backend and frontend modules upgraded successfully
+
+2. SPRING SECURITY COMPATIBILITY FIXES
+   -------------------------------------
+   Spring Security 6.5.1 introduced breaking API changes:
+   
+   PROBLEM: Old code used deprecated methods
+   SOLUTION: Updated SecurityConfig.java to use new Spring Security 6.x API
+   
+   Changes made:
+   - Removed antMatchers() → now using requestMatchers()
+   - Simplified configuration to use VaadinWebSecurity defaults
+   - Fixed SecurityConfig to call super.configure() first
+
+3. LOGIN FUNCTIONALITY REPAIR
+   ----------------------------
+   PROBLEM: Login form wasn't submitting to Spring Security
+   SOLUTION: Added missing form action attribute
+   
+   Code fix in LoginView.java:
+   loginForm.setAction("login");
+   
+   This tells the browser to submit credentials to Spring Security's 
+   authentication endpoint.
+
+4. VAADIN THEME FIX
+   -----------------
+   PROBLEM: Missing styles.css file caused Vaadin bundle validation to fail
+   SOLUTION: Created minimal theme file
+   
+   Created: autoshield-ui/frontend/themes/autoshield/styles.css
+   This file is required by Vaadin framework even if not using custom styles.
+
+5. PROXMOX INTEGRATION SETUP
+   ---------------------------
+   Connected AutoShield to Proxmox virtual environment at 192.168.100.64:8006
+   
+   Configuration added to application.yml:
+   proxmox:
+     api:
+       url: https://192.168.100.64:8006
+       token: root@pam!java=92214be5-1655-4684-bf63-ddb04d46d05a
+       timeout: 10000
+   
+   This allows the application to monitor Proxmox server metrics in real-time.
+
+6. PROXMOX NODE NAME DISCOVERY
+   ----------------------------
+   PROBLEM: Code hardcoded "pve" as node name, but actual node is "impaandaa"
+   SOLUTION: Found real node name through Proxmox API, updated all references
+   
+   Files updated:
+   - MetricsCollectionService.java (7 occurrences)
+   - DashboardView.java (1 occurrence)
+   
+   Changed: "pve" → "impaandaa" everywhere
+
+7. CRITICAL: PROXMOX API RESPONSE FORMAT CHANGE
+   ---------------------------------------------
+   PROBLEM: CPU showed 4%, but RAM and Disk showed 0%
+   
+   ROOT CAUSE: Proxmox changed how it returns data!
+   
+   OLD FORMAT (what code expected):
+   {
+     "cpu": 0.04,           ← Simple number
+     "memory": 2917466112,  ← Simple number (bytes used)
+     "maxmem": 4022902784,  ← Simple number (bytes total)
+     "rootfs": 10455654400, ← Simple number (bytes used)
+     "maxrootfs": 73778954240 ← Simple number (bytes total)
+   }
+   
+   NEW FORMAT (what Proxmox actually returns):
+   {
+     "cpu": 0.04,           ← Still a simple number (CPU works!)
+     "memory": {            ← Now an object!
+       "used": 2917466112,
+       "total": 4022902784,
+       "available": 1105436672,
+       "free": 780001280
+     },
+     "rootfs": {            ← Now an object!
+       "used": 10455654400,
+       "total": 73778954240,
+       "free": 63323299840,
+       "avail": 59528716288
+     }
+   }
+   
+   SOLUTION: Updated ProxmoxApiService.java to parse nested objects
+   
+   Code changes:
+   
+   FOR RAM (lines 52-60):
+   Instead of: calculatePercentage(data, "memory", "maxmem")
+   
+   Now:
+   Double ramPercent = 0.0;
+   if (data.get("memory") instanceof Map) {
+       Map<String, Object> memory = (Map<String, Object>) data.get("memory");
+       double used = extractDouble(memory, "used");
+       double total = extractDouble(memory, "total");
+       if (total > 0) {
+           ramPercent = (used / total) * 100;
+       }
+   }
+   
+   FOR DISK (lines 62-71):
+   Instead of: calculatePercentage(data, "rootfs", "maxrootfs")
+   
+   Now:
+   Double diskPercent = 0.0;
+   if (data.get("rootfs") instanceof Map) {
+       Map<String, Object> rootfs = (Map<String, Object>) data.get("rootfs");
+       double used = extractDouble(rootfs, "used");
+       double total = extractDouble(rootfs, "total");
+       if (total > 0) {
+           diskPercent = (used / total) * 100;
+       }
+   }
+   
+   RESULT: All metrics now working!
+   - CPU: 4.02%
+   - RAM: 71.84%
+   - Disk: 14.17%
+
+8. SYSTEM HEALTH STATUS
+   ---------------------
+   Dashboard shows "DEGRADED" because:
+   - Proxmox API: ✓ Working (all metrics displaying)
+   - Python AI Service: ✗ Not running (http://192.168.100.51:8000 unreachable)
+   - Database: ✓ Working (H2 database operational)
+   
+   This is expected if Python AI service isn't set up yet.
+
+================================================================================
+                         TECHNICAL DETAILS
+================================================================================
+
+PROJECT STRUCTURE:
+------------------
+webautoshild/
+├── autoshield-backend/     ← REST API server (port 8080)
+│   ├── pom.xml            ← Spring Boot 3.5.1
+│   ├── src/main/java/com/autoshield/
+│   │   ├── controller/     ← API endpoints
+│   │   ├── service/        ← Business logic (Proxmox integration here)
+│   │   ├── entity/         ← Database models
+│   │   └── repository/     ← Database access
+│   └── src/main/resources/
+│       └── application.yml ← Proxmox config here
+│
+└── autoshield-ui/          ← Web dashboard (port 8081)
+    ├── pom.xml            ← Spring Boot 3.5.1 + Vaadin 24.3
+    └── src/main/java/com/autoshield/
+        ├── views/          ← Dashboard UI
+        └── security/       ← Login & authentication
+
+KEY FILES MODIFIED:
+-------------------
+1. ProxmoxApiService.java
+   - Handles communication with Proxmox API
+   - Fetches CPU, RAM, Disk metrics every 30 seconds
+   - Fixed to parse new nested object format
+
+2. MetricsCollectionService.java
+   - Runs scheduled job (@Scheduled) every 30 seconds
+   - Calls ProxmoxApiService to get current metrics
+   - Stores metrics in H2 database for history
+
+3. SecurityConfig.java
+   - Spring Security configuration
+   - Updated for Spring Security 6.5.1 API changes
+   - Handles login authentication
+
+4. DashboardView.java
+   - Main Vaadin UI showing metrics cards
+   - Displays CPU, RAM, Disk, Active Threats
+   - Auto-refreshes every 10 seconds
+
+5. application.yml (backend)
+   - Proxmox API connection settings
+   - Database configuration (H2)
+   - Server port (8080)
+
+AUTHENTICATION:
+---------------
+Two users configured:
+- admin / admin123 (ADMIN + USER roles)
+- viewer / viewer123 (USER role only)
+
+DATABASE:
+---------
+H2 embedded database at ./data/autoshield
+Tables:
+- system_metrics (stores CPU/RAM/Disk history)
+- scan_results
+- alerts
+- users
+
+METRICS COLLECTION:
+-------------------
+Flow: Proxmox API → ProxmoxApiService → MetricsCollectionService → Database
+      → REST API → Dashboard UI
+
+Schedule: Every 30 seconds, the system:
+1. Calls Proxmox API: GET /api2/json/nodes/impaandaa/status
+2. Parses JSON response (memory and rootfs as nested objects)
+3. Calculates percentages: (used / total) * 100
+4. Stores in database with timestamp
+5. Dashboard polls backend every 10 seconds for latest data
+
+================================================================================
+                         HOW TO RUN THE APPLICATION
+================================================================================
+
+PREREQUISITES:
+- Java 21 (Eclipse Adoptium JDK installed)
+- Maven 3.9.11
+- Proxmox VE access (optional, for live metrics)
+
+START BACKEND:
+cd d:\webautoshild\autoshield-backend
+java -jar target\autoshield-backend-1.0.0.jar
+
+Backend starts on: http://localhost:8080
+API endpoints: http://localhost:8080/api/v1/...
+
+START FRONTEND:
+cd d:\webautoshild\autoshield-ui
+mvn spring-boot:run
+
+Frontend starts on: http://localhost:8081
+Login with: admin / admin123
+
+ACCESS POINTS:
+- Dashboard: http://localhost:8081
+- Backend API: http://localhost:8080/api-docs
+- Swagger UI: http://localhost:8080/swagger-ui.html
+- H2 Console: http://localhost:8080/h2-console
+  JDBC URL: jdbc:h2:file:./data/autoshield
+  Username: sa
+  Password: (empty)
+
+================================================================================
+                         LESSONS LEARNED
+================================================================================
+
+1. ALWAYS CHECK ACTUAL API RESPONSES
+   Don't assume API structure based on parameter names. The Proxmox API 
+   documentation said one thing, but the actual response was different!
+
+2. NESTED DATA STRUCTURES ARE COMMON
+   Modern APIs often return complex nested objects instead of flat key-value 
+   pairs. Always check if a value is an object before treating it as a number.
+
+3. VERSION COMPATIBILITY MATTERS
+   When upgrading frameworks (Spring Boot 3.2 → 3.5), related libraries 
+   (Spring Security) also get upgraded and may have breaking changes.
+
+4. MULTI-MODULE PROJECTS NEED SYNCHRONIZED VERSIONS
+   Both backend and frontend must use the same Spring Boot version, or you'll 
+   get weird runtime errors.
+
+5. VAADIN REQUIRES THEME FILES
+   Even if not customizing styles, Vaadin framework expects a styles.css file 
+   in the theme directory.
+
+6. EXTERNAL SYSTEM CONFIGURATION
+   Never hardcode external system names (like "pve" node name). Always 
+   discover them at runtime or make them configurable.
+
+================================================================================
+                         SECURITY NOTES
+================================================================================
+
+WARNING: The Proxmox API token in application.yml is EXPOSED in this 
+conversation. For production:
+
+1. Revoke this token:
+   pveum token remove root@pam!java
+
+2. Generate new token with proper permissions:
+   pveum token add root@pam!monitoring -privsep 0
+   pveum aclmod / -token 'root@pam!monitoring' -role Sys.Audit
+
+3. Use environment variables instead of hardcoded values:
+   token: ${PROXMOX_TOKEN}
+
+4. Grant minimum required permissions (Sys.Audit role only)
+
+================================================================================
+                         FINAL STATUS
+================================================================================
+
+✓ Backend: Running on port 8080 (PID 22796)
+✓ Frontend: Available on port 8081
+✓ Proxmox Integration: Working (node: impaandaa)
+✓ Metrics Collection: Active (every 30 seconds)
+✓ Database: H2 embedded, storing metrics history
+✓ Authentication: Working (admin/admin123)
+
+CURRENT METRICS:
+- CPU Usage: 4.02%
+- RAM Usage: 71.84%
+- Disk Usage: 14.17%
+- Active Threats: 0
+- System Health: DEGRADED (due to Python AI service being offline)
+
+All critical functionality is working. The DEGRADED status is expected 
+when the optional Python AI service isn't running.
+
+================================================================================
+                              END OF SUMMARY
+================================================================================

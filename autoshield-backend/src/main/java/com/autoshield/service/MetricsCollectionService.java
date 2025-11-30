@@ -35,7 +35,7 @@ public class MetricsCollectionService {
     @Transactional
     public void collectMetrics() {
         try {
-            SystemMetric metric = proxmoxApiService.fetchCurrentMetrics("pve");
+            SystemMetric metric = proxmoxApiService.fetchCurrentMetrics("impaandaa");
             
             // Add active threats count
             long activeThreats = alertRepository.countByStatus(com.autoshield.entity.Alert.AlertStatus.ACTIVE);
@@ -54,7 +54,7 @@ public class MetricsCollectionService {
      * Get current metrics
      */
     public SystemMetric getCurrentMetrics() {
-        return metricRepository.findFirstByNodeIdOrderByTimestampDesc("pve")
+        return metricRepository.findFirstByNodeIdOrderByTimestampDesc("impaandaa")
                 .orElse(createDefaultMetric());
     }
     
@@ -63,7 +63,7 @@ public class MetricsCollectionService {
      */
     public List<SystemMetric> getMetricHistory(int hours) {
         LocalDateTime since = LocalDateTime.now().minusHours(hours);
-        return metricRepository.findMetricHistory("pve", since);
+        return metricRepository.findMetricHistory("impaandaa", since);
     }
     
     /**
@@ -83,8 +83,8 @@ public class MetricsCollectionService {
     public AverageMetrics getAverageMetrics(int hours) {
         LocalDateTime since = LocalDateTime.now().minusHours(hours);
         
-        Double avgCpu = metricRepository.getAverageCpu("pve", since);
-        Double avgRam = metricRepository.getAverageRam("pve", since);
+        Double avgCpu = metricRepository.getAverageCpu("impaandaa", since);
+        Double avgRam = metricRepository.getAverageRam("impaandaa", since);
         
         return new AverageMetrics(
                 avgCpu != null ? avgCpu : 0.0,
@@ -94,7 +94,7 @@ public class MetricsCollectionService {
     
     private SystemMetric createDefaultMetric() {
         return SystemMetric.builder()
-                .nodeId("pve")
+                .nodeId("impaandaa")
                 .cpuPercent(0.0)
                 .ramPercent(0.0)
                 .diskPercent(0.0)

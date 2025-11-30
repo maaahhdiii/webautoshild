@@ -48,11 +48,33 @@ public class ProxmoxApiService {
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
                 Map<String, Object> data = (Map<String, Object>) response.getBody().get("data");
                 
+                // Extract RAM usage from memory object
+                Double ramPercent = 0.0;
+                if (data.get("memory") instanceof Map) {
+                    Map<String, Object> memory = (Map<String, Object>) data.get("memory");
+                    double used = extractDouble(memory, "used");
+                    double total = extractDouble(memory, "total");
+                    if (total > 0) {
+                        ramPercent = (used / total) * 100;
+                    }
+                }
+                
+                // Extract disk usage from rootfs object
+                Double diskPercent = 0.0;
+                if (data.get("rootfs") instanceof Map) {
+                    Map<String, Object> rootfs = (Map<String, Object>) data.get("rootfs");
+                    double used = extractDouble(rootfs, "used");
+                    double total = extractDouble(rootfs, "total");
+                    if (total > 0) {
+                        diskPercent = (used / total) * 100;
+                    }
+                }
+                
                 return SystemMetric.builder()
                         .nodeId(nodeId)
                         .cpuPercent(extractDouble(data, "cpu") * 100)
-                        .ramPercent(calculatePercentage(data, "memory", "maxmem"))
-                        .diskPercent(calculatePercentage(data, "rootfs", "maxrootfs"))
+                        .ramPercent(ramPercent)
+                        .diskPercent(diskPercent)
                         .networkBytesIn(extractLong(data, "netin"))
                         .networkBytesOut(extractLong(data, "netout"))
                         .activeThreats(0)

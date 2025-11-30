@@ -28,7 +28,7 @@ public class SecurityConfig extends VaadinWebSecurity {
     }
     
     @Bean
-    public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
+    UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
         UserDetails admin = User.builder()
                 .username("admin")
                 .password(passwordEncoder.encode("admin123"))
@@ -45,7 +45,7 @@ public class SecurityConfig extends VaadinWebSecurity {
     }
     
     @Bean
-    public PasswordEncoder passwordEncoder() {
+    PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 }

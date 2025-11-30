@@ -110,7 +110,7 @@ public class DashboardView extends VerticalLayout {
                         diskCard.updateValue(metrics.getDiskPercent());
                         threatCard.updateValue(metrics.getActiveThreats() != null ? metrics.getActiveThreats() : 0);
                         
-                        cpuCard.setDetails("Node: " + (metrics.getNodeId() != null ? metrics.getNodeId() : "pve"));
+                        cpuCard.setDetails("Node: " + (metrics.getNodeId() != null ? metrics.getNodeId() : "impaandaa"));
                     });
                 }
             }
