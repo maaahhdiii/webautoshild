@@ -18,9 +18,9 @@ import java.time.Duration;
  */
 @Configuration
 public class RestClientConfig {
-    
+
     @Bean
-    public RestTemplate restTemplate(RestTemplateBuilder builder) {
+    RestTemplate restTemplate(RestTemplateBuilder builder) {
         // Create a trust-all SSL context for Proxmox self-signed certificates
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout((int) Duration.ofSeconds(10).toMillis());

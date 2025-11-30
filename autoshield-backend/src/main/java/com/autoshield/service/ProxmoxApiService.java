@@ -109,16 +109,16 @@ public class ProxmoxApiService {
     
     private Double extractDouble(Map<String, Object> data, String key) {
         Object value = data.get(key);
-        if (value instanceof Number) {
-            return ((Number) value).doubleValue();
+        if (value instanceof Number number) {
+            return number.doubleValue();
         }
         return 0.0;
     }
     
     private Long extractLong(Map<String, Object> data, String key) {
         Object value = data.get(key);
-        if (value instanceof Number) {
-            return ((Number) value).longValue();
+        if (value instanceof Number number) {
+            return number.longValue();
         }
         return 0L;
     }
