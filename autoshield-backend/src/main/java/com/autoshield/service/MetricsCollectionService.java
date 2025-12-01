@@ -41,12 +41,18 @@ public class MetricsCollectionService {
             long activeThreats = alertRepository.countByStatus(com.autoshield.entity.Alert.AlertStatus.ACTIVE);
             metric.setActiveThreats((int) activeThreats);
             
+            // Log collected metrics for debugging
+            if (metric.getCpuPercent() == 0.0 && metric.getRamPercent() == 0.0 && metric.getDiskPercent() == 0.0) {
+                log.warn("Proxmox API returned zero metrics - check connection and API token");
+            } else {
+                log.info("✓ Collected metrics: CPU={}%, RAM={}%, Disk={}%, Active Threats={}", 
+                        metric.getCpuPercent(), metric.getRamPercent(), metric.getDiskPercent(), activeThreats);
+            }
+            
             metricRepository.save(metric);
-            log.debug("Collected metrics: CPU={}%, RAM={}%, Active Threats={}", 
-                    metric.getCpuPercent(), metric.getRamPercent(), activeThreats);
             
         } catch (Exception e) {
-            log.error("Error collecting metrics: {}", e.getMessage());
+            log.error("Error collecting metrics: {}", e.getMessage(), e);
         }
     }
     

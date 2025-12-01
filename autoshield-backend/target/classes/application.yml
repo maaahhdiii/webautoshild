@@ -52,7 +52,7 @@ springdoc:
 # Custom properties
 proxmox:
   api:
-    url: ${PROXMOX_URL:https://192.168.100.64:8006}
+    url: ${PROXMOX_URL:https://100.79.254.25:8006}
     token: ${PROXMOX_TOKEN:root@pam!java=92214be5-1655-4684-bf63-ddb04d46d05a}
     timeout: 10000
 

@@ -117,15 +117,16 @@ AutoShield provides real-time security monitoring, **AI-driven threat detection*
 │ • 7 Threat Playbooks│         │ • Updates alert status       │
 │ • Threat Scoring    │         └──────────────────────────────┘
 │ • SSH Orchestrator  │
-└──────────┬──────────┘
-           │
-           │ SSH (Port 22)
-           │ root@192.168.100.64
-           ▼
-┌─────────────────────────────────────────────────────────────┐
-│                  Proxmox VE Host                            │
-│                   192.168.100.64                            │
-│                                                             │
+└──────────┬──────────┘                    ┌──────────────────────┐
+           │                               │  MCP Kali Server     │
+           │                               │  (Claude/AI Agent)   │
+           │ SSH (Port 22)                 │                      │
+           │ root@100.79.254.25            │ • 70+ Kali Tools     │
+           ▼                               │ • Nmap, Metasploit   │
+┌─────────────────────────────────────────┤ • Nikto, SQLMap      │
+│  Proxmox VE Host                        │ • Hydra, John        │
+│  100.79.254.25                          │ • Burp Suite, ZAP    │
+│                                         └──────────────────────┘
 │  ┌──────────────────────────────────────────────────────┐  │
 │  │  Automated Actions via SSH:                         │  │
 │  │  • iptables -A INPUT -s <IP> -j DROP               │  │
@@ -147,6 +148,34 @@ AutoShield provides real-time security monitoring, **AI-driven threat detection*
 6. **Python AI** → Analyzes threat using playbooks, scores risk
 7. **Python AI** → Executes SSH commands on Proxmox for mitigation
 8. **Monitor** → Updates backend alert with actions taken + RESOLVED status
+9. **MCP Kali Server** → Provides Kali Linux penetration testing tools via Model Context Protocol
+
+## 🔧 MCP Kali Linux Server Integration
+
+AutoShield integrates with the **Model Context Protocol (MCP) Kali Server** to provide advanced penetration testing capabilities directly through Claude or compatible AI assistants.
+
+### Features:
+- **70+ Kali Linux Security Tools** accessible via MCP
+- **Network Scanning**: nmap, masscan, netdiscover
+- **Vulnerability Assessment**: nikto, wpscan, sqlmap
+- **Password Cracking**: john, hashcat, hydra
+- **Web Application Testing**: burpsuite, owasp-zap
+- **Wireless Auditing**: aircrack-ng, reaver
+- **Exploitation**: metasploit-framework, searchsploit
+- **Forensics**: autopsy, volatility, foremost
+
+### Setup:
+1. Install MCP Kali Server from: `https://github.com/maaahhdiii/MCP-KaliLinux-Server`
+2. Configure in Claude Desktop or compatible MCP client
+3. Tools become available for threat analysis and penetration testing
+4. Integrate with AutoShield threat detection workflows
+
+### Example Use Cases:
+- **Automated Vulnerability Scanning**: Trigger nmap/nikto scans on detected threats
+- **Exploit Verification**: Validate security alerts with metasploit modules
+- **Network Reconnaissance**: Investigate suspicious IPs with masscan
+- **Password Auditing**: Test credential strength with john/hashcat
+- **Web App Security**: Scan web services with wpscan/sqlmap
 
 ## 🚀 Quick Start
 

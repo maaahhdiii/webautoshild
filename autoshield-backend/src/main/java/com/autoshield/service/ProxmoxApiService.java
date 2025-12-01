@@ -39,6 +39,8 @@ public class ProxmoxApiService {
         try {
             String url = proxmoxUrl + "/api2/json/nodes/" + nodeId + "/status";
             
+            log.debug("Fetching metrics from Proxmox: {}", url);
+            
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", "PVEAPIToken=" + apiToken);
             HttpEntity<?> entity = new HttpEntity<>(headers);
@@ -47,6 +49,11 @@ public class ProxmoxApiService {
             
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
                 Map<String, Object> data = (Map<String, Object>) response.getBody().get("data");
+                
+                if (data == null) {
+                    log.error("Proxmox API returned null data - check node name '{}'", nodeId);
+                    return createDefaultMetric(nodeId);
+                }
                 
                 // Extract RAM usage from memory object
                 Double ramPercent = 0.0;
@@ -70,9 +77,13 @@ public class ProxmoxApiService {
                     }
                 }
                 
+                double cpuPercent = extractDouble(data, "cpu") * 100;
+                
+                log.debug("Proxmox metrics parsed: CPU={}%, RAM={}%, Disk={}%", cpuPercent, ramPercent, diskPercent);
+                
                 return SystemMetric.builder()
                         .nodeId(nodeId)
-                        .cpuPercent(extractDouble(data, "cpu") * 100)
+                        .cpuPercent(cpuPercent)
                         .ramPercent(ramPercent)
                         .diskPercent(diskPercent)
                         .networkBytesIn(extractLong(data, "netin"))
@@ -81,11 +92,14 @@ public class ProxmoxApiService {
                         .build();
             }
             
-            log.warn("Failed to fetch Proxmox metrics");
+            log.warn("Failed to fetch Proxmox metrics - status code: {}", response.getStatusCode());
             return createDefaultMetric(nodeId);
             
         } catch (RestClientException e) {
-            log.error("Error fetching Proxmox metrics: {}", e.getMessage());
+            log.error("⚠ Proxmox API connection failed: {} - Check URL: {} and API token", e.getMessage(), proxmoxUrl);
+            return createDefaultMetric(nodeId);
+        } catch (Exception e) {
+            log.error("⚠ Unexpected error fetching Proxmox metrics: {}", e.getMessage(), e);
             return createDefaultMetric(nodeId);
         }
     }
