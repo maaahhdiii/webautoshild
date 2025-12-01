@@ -39,9 +39,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/webhook/**").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
-                .requestMatchers("/api-docs/**").permitAll()
-                .requestMatchers("/swagger-ui/**").permitAll()
-                .requestMatchers("/swagger-ui.html").permitAll()
+                .requestMatchers("/api-docs", "/api-docs/**").permitAll()
+                .requestMatchers("/swagger-ui/**", "/swagger-ui.html").permitAll()
+                .requestMatchers("/v3/api-docs/**").permitAll()
                 // Authenticated endpoints
                 .anyRequest().authenticated()
             )

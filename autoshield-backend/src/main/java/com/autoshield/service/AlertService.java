@@ -24,6 +24,7 @@ import java.util.List;
 public class AlertService {
     
     private final AlertRepository alertRepository;
+    private final FirewallService firewallService;
     
     /**
      * Get alerts with filtering
@@ -48,7 +49,7 @@ public class AlertService {
     }
     
     /**
-     * Create new alert
+     * Create new alert with automated threat response
      */
     @Transactional
     public Alert createAlert(String type, Severity severity, String sourceIp, String details) {
@@ -61,9 +62,70 @@ public class AlertService {
                 .timestamp(LocalDateTime.now())
                 .build();
         
+        // AUTOMATED THREAT RESPONSE
+        String action = takeAutomatedAction(type, severity, sourceIp);
+        if (action != null) {
+            alert.setActionTaken(action);
+        }
+        
         Alert saved = alertRepository.save(alert);
-        log.info("Created alert: {} - {} from {}", type, severity, sourceIp);
+        log.info("🚨 Alert: {} - {} from {} | Action: {}", type, severity, sourceIp, action != null ? action : "None");
         return saved;
+    }
+    
+    /**
+     * Take automated action based on threat
+     */
+    private String takeAutomatedAction(String type, Severity severity, String sourceIp) {
+        if (sourceIp == null || sourceIp.isBlank()) {
+            return null;
+        }
+        
+        try {
+            // CRITICAL threats = Auto-block 24h
+            if (severity == Severity.CRITICAL) {
+                com.autoshield.dto.BlockIpRequest blockRequest = com.autoshield.dto.BlockIpRequest.builder()
+                        .ipAddress(sourceIp)
+                        .reason("AUTO-BLOCK: " + type + " (CRITICAL)")
+                        .durationMinutes(1440) // 24 hours
+                        .permanent(false)
+                        .build();
+                
+                firewallService.blockIp(blockRequest, "AutoShield-AI");
+                log.warn("🔴 CRITICAL THREAT BLOCKED: {} - Type: {}", sourceIp, type);
+                return "IP BLOCKED for 24h (CRITICAL threat)";
+            }
+            
+            // HIGH severity brute force/exploits = Auto-block 4h
+            if (severity == Severity.HIGH && (
+                type.toUpperCase().contains("BRUTE") || 
+                type.toUpperCase().contains("EXPLOIT") ||
+                type.toUpperCase().contains("ATTACK"))) {
+                
+                com.autoshield.dto.BlockIpRequest blockRequest = com.autoshield.dto.BlockIpRequest.builder()
+                        .ipAddress(sourceIp)
+                        .reason("AUTO-BLOCK: " + type + " (HIGH)")
+                        .durationMinutes(240) // 4 hours
+                        .permanent(false)
+                        .build();
+                
+                firewallService.blockIp(blockRequest, "AutoShield-AI");
+                log.warn("🟠 HIGH THREAT BLOCKED: {} - Type: {}", sourceIp, type);
+                return "IP BLOCKED for 4h (HIGH severity attack)";
+            }
+            
+            // MEDIUM threats = Warning only
+            if (severity == Severity.MEDIUM) {
+                log.info("⚠️ Medium threat detected from {} - Monitoring", sourceIp);
+                return "Threat logged - Under monitoring";
+            }
+            
+        } catch (Exception e) {
+            log.error("❌ Failed to take automated action for {}: {}", sourceIp, e.getMessage());
+            return "Auto-block failed: " + e.getMessage();
+        }
+        
+        return null;
     }
     
     /**
@@ -77,6 +139,12 @@ public class AlertService {
         if (request.getNotes() != null) {
             String updatedDetails = alert.getDetails() + "\n[Updated] " + request.getNotes();
             alert.setDetails(updatedDetails);
+            
+            // Extract action from notes if it contains "AI Automated Response:"
+            if (request.getNotes().contains("AI Automated Response:")) {
+                String action = request.getNotes().replace("AI Automated Response: ", "");
+                alert.setActionTaken(action);
+            }
         }
         
         Alert updated = alertRepository.save(alert);

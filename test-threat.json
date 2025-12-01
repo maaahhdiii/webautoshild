@@ -1,0 +1,6 @@
+{
+    "failed_attempts": 25,
+    "duration_seconds": 60,
+    "usernames_tried": ["root", "admin"],
+    "target_system": "proxmox-host"
+}

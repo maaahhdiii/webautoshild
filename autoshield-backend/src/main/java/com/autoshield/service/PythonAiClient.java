@@ -43,18 +43,20 @@ public class PythonAiClient {
             
             ResponseEntity<Map> response = restTemplate.postForEntity(url, entity, Map.class);
             
-            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+            // Accept both 200 OK and 202 Accepted status codes
+            if ((response.getStatusCode() == HttpStatus.OK || response.getStatusCode() == HttpStatus.ACCEPTED) 
+                && response.getBody() != null) {
                 Map<String, Object> body = response.getBody();
                 return ScanResponse.builder()
                         .scanId((String) body.get("scan_id"))
                         .status((String) body.get("status"))
                         .message((String) body.get("message"))
                         .targetIp(targetIp)
-                        .estimatedCompletionTime((String) body.get("estimated_time"))
+                        .estimatedCompletionTime(String.valueOf(body.get("estimated_time")))
                         .build();
             }
             
-            throw new RuntimeException("Failed to execute scan");
+            throw new RuntimeException("Failed to execute scan: " + response.getStatusCode());
             
         } catch (RestClientException e) {
             log.error("Error calling Python AI service: {}", e.getMessage());
